@@ -109,7 +109,7 @@ class EmployeeController extends Controller
     public function show(string $id): Response
     {
         return Inertia::render('Employee/EmployeeView', [
-            'employee' => Employee::with("salaries", "roles", 'employeeShifts.shift', 'employeePositions.position', 'manages')
+            'employee' => Employee::with("salaries", "roles", 'employeeShifts.shift', 'employeePositions.position', 'manages', 'documents')
                 ->leftjoin('departments', 'employees.department_id',
                     '=', 'departments.id')
                 ->leftJoin('branches', 'employees.branch_id', '=', 'branches.id')

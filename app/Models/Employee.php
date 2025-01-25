@@ -294,6 +294,9 @@ class Employee extends Authenticatable
             "hoursDifference" => $actualHours - $expectedHours,
         ];
     }
-
+    public function documents()
+    {
+        return $this->hasMany(EmployeeDocument::class);
+    }
 
 }

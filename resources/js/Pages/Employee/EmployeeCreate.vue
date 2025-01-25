@@ -41,6 +41,9 @@ const form = useForm({
     salary: '',
     role: '',
     is_remote: false,
+    documents: [
+        { document_name: '', file: null, expiration_date: '' }
+    ]
 });
 
 const positionForm = useForm({
@@ -92,6 +95,22 @@ const submitPosition = () => {
         }
     });
 };
+
+// Add a new empty document entry
+const addDocument = () => {
+    form.documents.push({ document_name: '', file: null, expiration_date: '' });
+};
+// Remove a document entry
+const removeDocument = (index) => {
+    form.documents.splice(index, 1);
+};
+
+// Handle file input change
+const handleFileChange = (event, index) => {
+    form.documents[index].file = event.target.files[0];
+};
+
+
 const submitBranch = () => {
     branchForm.post(route('branches.store'), {
         preserveScroll: true,
@@ -120,6 +139,8 @@ const submitDepartment = () => {
         }
     });
 };
+
+
 const submitShift = () => {
     shiftForm.post(route('shifts.store'), {
         preserveScroll: true,
@@ -594,6 +615,53 @@ const submitShift = () => {
                                     </select>
                                     <InputError class="mt-2" :message="form.errors.role"/>
                                 </div>
+                            </div>
+                            <div class="mt-6">
+                                <h3 class="font-semibold text-lg">Documents</h3>
+                                <div v-for="(document, index) in form.documents" :key="index" class="mt-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <InputLabel :for="'document_name_' + index" value="Document Name" />
+                                            <TextInput
+                                                :id="'document_name_' + index"
+                                                v-model="document.document_name"
+                                                type="text"
+                                                class="mt-1 block w-full"
+                                            />
+                                            <InputError :message="form.errors[`documents.${index}.document_name`]" class="mt-2" />
+                                        </div>
+
+                                        <div>
+                                            <InputLabel :for="'file_' + index" value="File" />
+                                            <input
+                                                :id="'file_' + index"
+                                                type="file"
+                                                class="mt-1 block w-full"
+                                                @change="(e) => handleFileChange(e, index)"
+                                            />
+                                            <InputError :message="form.errors[`documents.${index}.file`]" class="mt-2" />
+                                        </div>
+
+                                        <div>
+                                            <InputLabel :for="'expiration_date_' + index" value="Expiration Date (Optional)" />
+                                            <TextInput
+                                                :id="'expiration_date_' + index"
+                                                v-model="document.expiration_date"
+                                                type="date"
+                                                class="mt-1 block w-full"
+                                            />
+                                            <InputError :message="form.errors[`documents.${index}.expiration_date`]" class="mt-2" />
+                                        </div>
+                                    </div>
+
+                                    <button type="button" class="text-red-500 mt-2" @click="removeDocument(index)">
+                                        Remove Document
+                                    </button>
+                                </div>
+
+                                <button type="button" class="text-blue-500 mt-4" @click="addDocument">
+                                    Add Another Document
+                                </button>
                             </div>
                             <div class="grid grid-cols-2 gap-8 mt-4">
                                 <div>

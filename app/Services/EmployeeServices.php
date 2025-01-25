@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Mail\EmployeeRegisterationCredentials;
 use App\Models\ArchivedEmployee;
 use App\Models\Employee;
+use App\Models\EmployeeDocument;
 use App\Models\EmployeePosition;
 use App\Models\EmployeeSalary;
 use App\Models\EmployeeShift;
@@ -65,6 +66,24 @@ class EmployeeServices
 
         // Assign Role
         $emp->assignRole($res['role']);
+
+        if (isset($res['documents']) && is_array($res['documents'])) {
+            foreach ($res['documents'] as $document) {
+                if (isset($document['file'])) {
+                    // Store the file
+                    $filePath = $document['file']->store('employee_documents');
+
+                    // Save document data in the database
+                    EmployeeDocument::create([
+                        'employee_id' => $emp->id,
+                        'document_name' => $document['document_name'],
+                        'file_path' => $filePath,
+                        'expiration_date' => $document['expiration_date'] ?? null,
+                    ]);
+                }
+            }
+        }
+
 
         // Send Email to user with credentials
         Mail::to($emp->email)->send(new EmployeeRegisterationCredentials([
