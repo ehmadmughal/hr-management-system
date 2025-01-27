@@ -11,6 +11,7 @@ use App\Models\EmployeeSalary;
 use App\Models\EmployeeShift;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeServices
 {
@@ -71,7 +72,7 @@ class EmployeeServices
             foreach ($res['documents'] as $document) {
                 if (isset($document['file'])) {
                     // Store the file
-                    $filePath = $document['file']->store('employee_documents');
+                    $filePath = $document['file']->store('employee_documents','public');
 
                     // Save document data in the database
                     EmployeeDocument::create([
@@ -153,12 +154,39 @@ class EmployeeServices
             ]);
         }
 
+        // Update Employee Documents
+        if (!empty($res['documents'])) {
+            foreach ($res['documents'] as $doc) {
+                if (!empty($doc['remove']) && $doc['remove'] == true) {
+                    // Remove the document
+                    $employee->documents()->where('id', $doc['id'])->delete();
+                    Storage::delete('employee_documents/' . $doc['file_name']);
+                } elseif (isset($doc['id']) && !empty($doc['document_name'])) {
+                    // Update existing document details
+                    $employee->documents()->where('id', $doc['id'])->update([
+                        'document_name' => $doc['document_name'],
+                        'expiration_date' => $doc['expiration_date'] ?? null,
+                    ]);
+                } elseif (empty($doc['id']) && !empty($doc['file'])) {
+                    // Add new document
+                    $filePath = $doc['file']->store('employee_documents', 'public');
+                    $employee->documents()->create([
+                        'document_name' => $doc['document_name'],
+                        'file_name' => basename($filePath),
+                        'expiration_date' => $doc['expiration_date'] ?? null,
+                    ]);
+                }
+            }
+        }
+
         $currentRole = $employee->getRoleNames()->first();
         if ($currentRole != $res['role']) {
             $employee->removeRole($currentRole);
             $employee->assignRole($res['role']);
             $employee->save();
         }
+
+
         return to_route('employees.show', ['employee' => $employee->id]);
     }
 

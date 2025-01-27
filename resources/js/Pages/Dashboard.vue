@@ -18,6 +18,12 @@ import MoneyIcon from "@/Components/Icons/MoneyIcon.vue";
 import CalendarIcon from "@/Components/Icons/CalendarIcon.vue";
 import TableIcon from "@/Components/Icons/TableIcon.vue";
 import MessageIcon from "@/Components/Icons/MessageIcon.vue";
+import Table from "@/Components/Table/Table.vue";
+import TableHead from "@/Components/Table/TableHead.vue";
+import TableBody from "@/Components/Table/TableBody.vue";
+import TableBodyHeader from "@/Components/Table/TableBodyHeader.vue";
+import TableBodyAction from "@/Components/Table/TableBodyAction.vue";
+import TableRow from "@/Components/Table/TableRow.vue";
 import {__} from "@/Composables/useTranslations.js";
 import {CallQuoteAPI} from "@/Composables/useCallQuoteAPI.js";
 
@@ -27,13 +33,17 @@ const props = defineProps({
     employee_stats: Object,
     attendance_status: Number,
     is_today_off: Boolean,
+    expiringDocuments: Object
 });
+
+
 const days_remaining = computed(() => {
     return daysUntilNthDayOfMonth(props.payroll_day);
 });
 const pay_day_percentage = computed(() => {
     return Math.floor((daysBetweenNthDates(props.payroll_day) - days_remaining.value) / daysBetweenNthDates(props.payroll_day) * 100);
 });
+
 
 const dayNth = computed(() => {
     return props.payroll_day === 1 ? __('st') :
@@ -258,6 +268,43 @@ onMounted(() => {
                             </div>
                         </div>
                     </Card>
+                </div>
+
+                <div class="flex flex-col md:flex-row">
+                    <!-- Expiring Documents -->
+                    <Card class="w-full">
+                        <h1 class="text-2xl text-white">{{ __('Expiring Documents (In 60 Days)') }}</h1>
+                        <Table :links="expiringDocuments.links" :showingNumber="expiringDocuments.data.length" :totalNumber="expiringDocuments.total">
+                            <template #Head>
+                                <TableHead>{{__('Document Name')}}</TableHead>
+                                <TableHead>{{__('Employee Name')}}</TableHead>
+                                <TableHead>{{__('Expiry Date')}}</TableHead>
+                                <TableHead>{{__('Days Left')}}</TableHead>
+                                <TableHead>{{__('Action')}}</TableHead>
+                            </template>
+
+                            <!--Iterate Here-->
+                            <template #Body>
+                                <TableRow v-for="doc in expiringDocuments.data" :key="doc.id">
+                                    <TableBodyHeader :href="route('employees.show', {id: doc.employee.id})">{{doc.document_name}}</TableBodyHeader>
+                                    <TableBodyHeader :href="route('employees.show', {id: doc.employee.id})">{{doc.employee.name}}</TableBodyHeader>
+                                    <TableBodyHeader :href="route('employees.show', {id: doc.employee.id})">{{doc.expiration_date}}</TableBodyHeader>
+                                    <TableBodyHeader :href="route('employees.show', {id: doc.employee.id})">
+                                        {{
+                                            doc.expiration_date
+                                                ? Math.max(
+                                                Math.ceil(
+                                                    (new Date(doc.expiration_date) - new Date()) / (1000 * 60 * 60 * 24)
+                                                ),
+                                                0
+                                                )
+                                                : __('No Expiry')
+                                        }}</TableBodyHeader>
+                                </TableRow>
+                            </template>
+                        </Table>
+                    </Card>
+
                 </div>
 
                 <!-- QUICK ACTIONS -->

@@ -12,6 +12,7 @@ use App\Services\EmployeeServices;
 use App\Services\ValidationServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -128,7 +129,7 @@ class EmployeeController extends Controller
     public function edit(string $id)
     {
         return Inertia::render('Employee/EmployeeEdit', [
-            'employee' => Employee::with("salaries", "roles", 'employeeShifts.shift', 'employeePositions.position')
+            'employee' => Employee::with("salaries", "roles", 'employeeShifts.shift', 'employeePositions.position', 'documents')
                 ->leftjoin('departments', 'employees.department_id',
                     '=', 'departments.id')
                 ->leftJoin('branches', 'employees.branch_id', '=', 'branches.id')
@@ -177,5 +178,15 @@ class EmployeeController extends Controller
                     ->orWhere('national_id', 'ILIKE', '%' . $term . '%');
             })->get(),
         ]);
+    }
+    public function downloadDocument($fileName)
+    {
+        $filePath = 'employee_documents/' . $fileName;
+
+        if (Storage::exists($filePath)) {
+            return Storage::download($filePath);
+        }
+
+        abort(404); // Return a 404 response if the file is not found
     }
 }

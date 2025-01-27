@@ -18,6 +18,7 @@ Route::group(['middleware' => ['role:admin', 'auth']], function () {
 
     Route::get('employees/find', [\App\Http\Controllers\EmployeeController::class, 'find'])->name('employees.find');
     Route::get('employees/archived', [\App\Http\Controllers\EmployeeController::class, 'archivedIndex'])->name('employees.archived');
+    Route::get('/storage/{fileName}', [\App\Http\Controllers\EmployeeController::class, 'downloadDocument'])->name('downloadDocument');
     Route::resource('employees', \App\Http\Controllers\EmployeeController::class);
     Route::resource('branches', \App\Http\Controllers\BranchController::class);
     Route::resource('departments', \App\Http\Controllers\DepartmentController::class);

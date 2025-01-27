@@ -241,19 +241,10 @@ const computedManages = computed(() => {
                                 <TableBody>{{ document.document_name }}</TableBody>
                                 <TableBody>{{ document.expiration_date ?? __('No Expiry') }}</TableBody>
                                 <TableBody>{{ calculateDaysLeft(document.expiration_date) }}</TableBody>
-                                <TableBody>
-
-                                    <GenericModal modalId="'view-document-' + document.id"
-                                                  :title="__('View')"
-                                                  :modalHeader="document.document_name"
-                                                  :hasCancel="false">
-                                        <iframe :src="`/storage/${document.file_path}`"></iframe>
-                                    </GenericModal>
-
-                                    <SecondaryButton class="ml-2">
-                                        {{ __('Download') }}
-                                    </SecondaryButton>
-                                </TableBody>
+                                <td><a :href="route('downloadDocument', { fileName: document.file_path })"
+                                           target="_blank" class="font-medium text-purple-600 dark:text-purple-500 hover:underline">
+                                    {{__('View')}}
+                                </a></td>
                             </TableRow>
                         </template>
                     </Table>

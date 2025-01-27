@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmployeeDocument;
 use App\Models\Globals;
 use App\Services\CommonServices;
 use Carbon\Carbon;
@@ -25,12 +26,21 @@ class DashboardController extends Controller
             $attendanceStatus = 2;
         }
 
+        $expiringDocuments = EmployeeDocument::with('employee')->where('expiration_date', '>=', now())
+            ->where('expiration_date', '<=', now()->addDays(60));
+
+        if (!isAdmin()) {
+            $expiringDocuments->where('employee_id', auth()->user()->id);
+        }
+
         return Inertia::render('Dashboard', [
             'salary' => auth()->user()->salary(),
             'payroll_day' => Globals::first()->payroll_day,
             "employee_stats" => auth()->user()->myStats(),
             "attendance_status" => $attendanceStatus,
             "is_today_off" => $isTodayOff,
+            "expiringDocuments" => $expiringDocuments->orderBy('expiration_date')
+                ->paginate(config('constants.data.pagination_count'))
         ]);
     }
 }
