@@ -71,14 +71,18 @@ class EmployeeServices
         if (isset($res['documents']) && is_array($res['documents'])) {
             foreach ($res['documents'] as $document) {
                 if (isset($document['file'])) {
+                    $date = Carbon::now()->format('Ymd_His'); // Example: 20240130_153012
+                    $extension = $document['file']->getClientOriginalExtension();
+
+                    $fileName = "{$emp->id}_{$date}_{$document['document_name']}.{$extension}";
                     // Store the file
-                    $filePath = $document['file']->store('employee_documents','public');
+                    $filePath = $document['file']->storeAs('employee_documents', $fileName, 'public');
 
                     // Save document data in the database
                     EmployeeDocument::create([
                         'employee_id' => $emp->id,
                         'document_name' => $document['document_name'],
-                        'file_path' => $filePath,
+                        'file_path' => $fileName,
                         'expiration_date' => $document['expiration_date'] ?? null,
                     ]);
                 }

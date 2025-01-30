@@ -1,0 +1,1 @@
+import{a as t,b as r,g as o,e as l,y as a,u as f,s as n}from"./app-7572aa5b.js";const c={class:"px-6 py-3"},d={__name:"TableBody",props:{href:String},setup(e){return(s,h)=>(t(),r("td",c,[e.href?(t(),o(f(n),{key:0,href:e.href},{default:l(()=>[a(s.$slots,"default")]),_:3},8,["href"])):a(s.$slots,"default",{key:1})]))}};export{d as _};

@@ -1,0 +1,1 @@
+import{_ as e}from"./_plugin-vue_export-helper-c27b6911.js";import{a as o,b as a,y as t}from"./app-7572aa5b.js";const s={},c={class:"bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"};function n(r,d){return o(),a("tr",c,[t(r.$slots,"default")])}const g=e(s,[["render",n]]);export{g as T};
