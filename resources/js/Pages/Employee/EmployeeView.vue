@@ -23,6 +23,9 @@ import TableHead from "@/Components/Table/TableHead.vue";
 import TableRow from "@/Components/Table/TableRow.vue";
 import TableBodyAction from "@/Components/Table/TableBodyAction.vue";
 import ToolTip from "@/Components/ToolTip.vue";
+import { ref } from 'vue'
+import { Modal } from 'flowbite'
+import { useForm } from '@inertiajs/vue3'
 import {__} from "@/Composables/useTranslations.js";
 
 
@@ -35,6 +38,37 @@ onMounted(() => {
 const props = defineProps({
     employee: Object,
 })
+
+
+// Add Document Form
+const documentForm = useForm({
+    document_name: '',
+    expiration_date: null,
+    file: null,
+    employee_id: props.employee.id
+})
+
+const submitDocument = () => {
+    documentForm.post(route('documents.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Close the modal using Flowbite
+            const modal = new Modal(document.getElementById('addDocumentModal'))
+            modal.hide()
+
+            // Reset the form
+            documentForm.reset()
+
+            // Refresh employee details (if you have a fetchEmployeeDetails method)
+            if (typeof fetchEmployeeDetails === "function") {
+                fetchEmployeeDetails()
+            } else {
+                window.location.reload() // Fallback if dynamic refresh is not available
+            }
+        }
+    })
+}
+
 
 const calculateDaysLeft = (expirationDate) => {
     if (!expirationDate) return __('N/A');
@@ -225,7 +259,16 @@ const computedManages = computed(() => {
                     </DescriptionList>
                 </Card>
                 <Card>
-                    <h2 class="mb-2 ml-1 font-semibold">{{ __('Employee Documents') }}</h2>
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="ml-1 font-semibold">{{ __('Employee Documents') }}</h2>
+                        <!-- Add Document Button -->
+                        <PrimaryButton
+                            :data-modal-target="'addDocumentModal'"
+                            :data-modal-toggle="'addDocumentModal'"
+                            class="px-4 py-2">
+                            {{ __('Add Document') }}
+                        </PrimaryButton>
+                    </div>
                     <Table :totalNumber="1" :enablePaginator="false">
                         <p class="test">{{ employee.salaries }}</p>
                         <template #Head>
@@ -253,6 +296,70 @@ const computedManages = computed(() => {
                             {{ __('No documents available') }}
                         </TableBody>
                     </TableRow>
+                    <!-- Add Document Modal -->
+                    <GenericModal
+                        modalId="addDocumentModal"
+                        :modalHeader="__('Add New Document')"
+                        :hasCustomFooter="true">
+                        <form @submit.prevent="submitDocument" class="space-y-4">
+                            <!-- Document Name -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ __('Document Name') }}
+                                </label>
+                                <input
+                                    v-model="documentForm.document_name"
+                                    type="text"
+                                    required
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-purple-500 dark:focus:border-purple-500"
+                                    :class="{ 'border-red-500': documentForm.errors.document_name }">
+                                <p v-if="documentForm.errors.document_name" class="mt-2 text-sm text-red-600">
+                                    {{ documentForm.errors.document_name }}
+                                </p>
+                            </div>
+
+                            <!-- File Upload -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ __('File') }}
+                                </label>
+                                <input
+                                    type="file"
+                                    @change="documentForm.file = $event.target.files[0]"
+                                    required
+                                    class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                                <p v-if="documentForm.errors.file" class="mt-2 text-sm text-red-600">
+                                    {{ documentForm.errors.file }}
+                                </p>
+                            </div>
+
+                            <!-- Expiration Date -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ __('Expiration Date') }}
+                                </label>
+                                <input
+                                    v-model="documentForm.expiration_date"
+                                    type="date"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-purple-500 dark:focus:border-purple-500">
+                            </div>
+                        </form>
+
+                        <!-- Custom Footer Slot -->
+                        <template #customFooter>
+                            <SecondaryButton class="mr-2"
+                                type="button"
+                                :data-modal-hide="'addDocumentModal'">
+                                {{ __('Cancel') }}
+                            </SecondaryButton>
+                            <PrimaryButton
+                                type="submit"
+                                @click="submitDocument"
+                                :disabled="documentForm.processing">
+                                {{ documentForm.processing ? __('Uploading...') : __('Upload') }}
+                            </PrimaryButton>
+                        </template>
+                    </GenericModal>
                 </Card>
                 <Card>
                     <h2 class="mb-2 ml-1 font-semibold">{{ __('History') }}</h2>

@@ -50,7 +50,7 @@ Class ValidationServices extends Controller {
             'role' => ['required', Rule::in($this->roles)],
             'documents' => ['array'], // Expect an array of documents
             'documents.*.document_name' => ['required', 'string', 'max:255'], // Document name is required
-            'documents.*.file' => ['required', 'file', 'mimes:pdf,jpeg,png,jpg', 'max:2048'], // File should be PDF or image, max size 2MB
+            'documents.*.file' => ['required', 'file', 'mimes:pdf,jpeg,png,jpg', 'max:10240'], // File should be PDF or image, max size 2MB
             'documents.*.expiration_date' => ['nullable', 'date_format:Y-m-d'], // Optional expiration date
 
         ], $this->validationMessages);

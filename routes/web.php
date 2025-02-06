@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,7 @@ Route::group(['middleware' => ['role:admin', 'auth']], function () {
     Route::get('employees/find', [\App\Http\Controllers\EmployeeController::class, 'find'])->name('employees.find');
     Route::get('employees/archived', [\App\Http\Controllers\EmployeeController::class, 'archivedIndex'])->name('employees.archived');
     Route::get('/storage/employee_documents/{fileName}', [\App\Http\Controllers\EmployeeController::class, 'downloadDocument'])->name('downloadDocument');
+    Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
     Route::resource('employees', \App\Http\Controllers\EmployeeController::class);
     Route::resource('branches', \App\Http\Controllers\BranchController::class);
     Route::resource('departments', \App\Http\Controllers\DepartmentController::class);
