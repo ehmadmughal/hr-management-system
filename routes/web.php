@@ -21,6 +21,7 @@ Route::group(['middleware' => ['role:admin', 'auth']], function () {
     Route::get('employees/archived', [\App\Http\Controllers\EmployeeController::class, 'archivedIndex'])->name('employees.archived');
     Route::get('/storage/employee_documents/{fileName}', [\App\Http\Controllers\EmployeeController::class, 'downloadDocument'])->name('downloadDocument');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::post('/documents/{id}', [DocumentController::class, 'update'])->name('documents.update');
     Route::resource('employees', \App\Http\Controllers\EmployeeController::class);
     Route::resource('branches', \App\Http\Controllers\BranchController::class);
     Route::resource('departments', \App\Http\Controllers\DepartmentController::class);

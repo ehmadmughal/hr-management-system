@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {Head} from '@inertiajs/vue3';
-import {computed, onMounted} from "vue";
+import { computed, onMounted } from "vue";
 import EmployeeTabs from "@/Components/Tabs/EmployeeTabs.vue";
 import FlexButton from "@/Components/FlexButton.vue";
 import {useExtractPersonalDetails} from "@/Composables/useExtractPersonalDetails.js";
@@ -12,6 +12,7 @@ import Card from "@/Components/Card.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import ModifyIcon from "@/Components/Icons/ModifyIcon.vue";
+import PlusIcon from "@/Components/Icons/PlusIcon.vue";
 import DescriptionList from "@/Components/DescriptionList/DescriptionList.vue";
 import DT from "@/Components/DescriptionList/DT.vue";
 import DD from "@/Components/DescriptionList/DD.vue";
@@ -23,13 +24,13 @@ import TableHead from "@/Components/Table/TableHead.vue";
 import TableRow from "@/Components/Table/TableRow.vue";
 import TableBodyAction from "@/Components/Table/TableBodyAction.vue";
 import ToolTip from "@/Components/ToolTip.vue";
-import { ref } from 'vue'
+import {ref} from "vue";
 import { Modal } from 'flowbite'
 import { useForm } from '@inertiajs/vue3'
 import {__} from "@/Composables/useTranslations.js";
 
-
 let {extractPersonalDetails} = useExtractPersonalDetails()
+// let modalInstance = null;
 
 onMounted(() => {
     initModals();
@@ -42,32 +43,63 @@ const props = defineProps({
 
 // Add Document Form
 const documentForm = useForm({
-    document_name: '',
+    document_id: null, // New field to determine if we are editing
+    document_name: null,
     expiration_date: null,
     file: null,
     employee_id: props.employee.id
-})
+});
+
+
+const openEditDocument = (doc) => {
+    documentForm.document_id = doc.id;
+    documentForm.document_name = doc.document_name;
+    documentForm.file = null;
+    documentForm.expiration_date = doc.expiration_date;
+    
+};
 
 const submitDocument = () => {
-    documentForm.post(route('documents.store'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            // Close the modal using Flowbite
-            const modal = new Modal(document.getElementById('addDocumentModal'))
-            modal.hide()
+    // If document_id exists, we are editing – use the update route
+    if (documentForm.document_id) {
+        console.log('update');
+        documentForm.submit('post',route('documents.update', documentForm.document_id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Hide the modal using Flowbite
+                const modal = new Modal(document.getElementById('addDocumentModal'));
+                modal.hide();
 
-            // Reset the form
-            documentForm.reset()
+                // Reset the form
+                documentForm.reset();
 
-            // Refresh employee details (if you have a fetchEmployeeDetails method)
-            if (typeof fetchEmployeeDetails === "function") {
-                fetchEmployeeDetails()
-            } else {
-                window.location.reload() // Fallback if dynamic refresh is not available
+                // Refresh employee details (if available) or reload
+                if (typeof fetchEmployeeDetails === "function") {
+                    fetchEmployeeDetails();
+                } else {
+                    window.location.reload();
+                }
             }
-        }
-    })
-}
+        });
+    } else {
+        console.log('store')
+        console.log(documentForm);
+        // Otherwise, create a new document
+        documentForm.submit('post',route('documents.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                const modal = new Modal(document.getElementById('addDocumentModal'));
+                modal.hide();
+                documentForm.reset();
+                if (typeof fetchEmployeeDetails === "function") {
+                    fetchEmployeeDetails();
+                } else {
+                    window.location.reload();
+                }
+            }
+        });
+    }
+};
 
 
 const calculateDaysLeft = (expirationDate) => {
@@ -262,10 +294,11 @@ const computedManages = computed(() => {
                     <div class="flex justify-between items-center mb-2">
                         <h2 class="ml-1 font-semibold">{{ __('Employee Documents') }}</h2>
                         <!-- Add Document Button -->
-                        <PrimaryButton
+                        <PrimaryButton v-if="$page.props.auth.user.roles.includes('admin')"
                             :data-modal-target="'addDocumentModal'"
                             :data-modal-toggle="'addDocumentModal'"
                             class="px-4 py-2">
+                            <PlusIcon/>
                             {{ __('Add Document') }}
                         </PrimaryButton>
                     </div>
@@ -287,7 +320,14 @@ const computedManages = computed(() => {
                                 <td><a :href="route('downloadDocument', { fileName: document.file_path })"
                                            target="_blank" class="font-medium text-purple-600 dark:text-purple-500 hover:underline">
                                     {{__('View')}}
-                                </a></td>
+                                </a>
+                                    <a href="#" v-if="$page.props.auth.user.roles.includes('admin')"
+                                        @click.prevent="openEditDocument(document)" :data-modal-target="'addDocumentModal'"
+                                       :data-modal-toggle="'addDocumentModal'"
+                                       class="ml-2 font-medium text-purple-600 dark:text-purple-500 hover:underline">
+                                        {{ __('Edit') }}
+                                    </a>
+                                </td>
                             </TableRow>
                         </template>
                     </Table>
@@ -299,10 +339,10 @@ const computedManages = computed(() => {
                     <!-- Add Document Modal -->
                     <GenericModal
                         modalId="addDocumentModal"
-                        :modalHeader="__('Add New Document')"
+                        :modalHeader="documentForm.document_id ? __('Edit Document') : __('Add New Document')"
                         :hasCustomFooter="true">
                         <form @submit.prevent="submitDocument" class="space-y-4">
-                            <!-- Document Name -->
+                            <!-- Document Name Field -->
                             <div>
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     {{ __('Document Name') }}
@@ -318,7 +358,7 @@ const computedManages = computed(() => {
                                 </p>
                             </div>
 
-                            <!-- File Upload -->
+                            <!-- File Upload Field -->
                             <div>
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     {{ __('File') }}
@@ -326,14 +366,13 @@ const computedManages = computed(() => {
                                 <input
                                     type="file"
                                     @change="documentForm.file = $event.target.files[0]"
-                                    required
-                                    class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
                                 <p v-if="documentForm.errors.file" class="mt-2 text-sm text-red-600">
                                     {{ documentForm.errors.file }}
                                 </p>
                             </div>
 
-                            <!-- Expiration Date -->
+                            <!-- Expiration Date Field -->
                             <div>
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     {{ __('Expiration Date') }}
@@ -347,8 +386,10 @@ const computedManages = computed(() => {
 
                         <!-- Custom Footer Slot -->
                         <template #customFooter>
-                            <SecondaryButton class="mr-2"
+                            <SecondaryButton
+                                class="mr-2"
                                 type="button"
+                                @click="resetDocumentForm"
                                 :data-modal-hide="'addDocumentModal'">
                                 {{ __('Cancel') }}
                             </SecondaryButton>
@@ -356,7 +397,10 @@ const computedManages = computed(() => {
                                 type="submit"
                                 @click="submitDocument"
                                 :disabled="documentForm.processing">
-                                {{ documentForm.processing ? __('Uploading...') : __('Upload') }}
+                                {{ documentForm.processing
+                                ? __('Processing...')
+                                : (documentForm.document_id ? __('Update') : __('Upload'))
+                                }}
                             </PrimaryButton>
                         </template>
                     </GenericModal>

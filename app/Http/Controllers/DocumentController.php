@@ -36,4 +36,30 @@ class DocumentController extends Controller
             'newDocument' => $document // Add this line
         ]);
     }
+
+    public function update(Request $request, $id)
+    {
+
+        $document = EmployeeDocument::findOrFail($id);
+        $validated = $request->validate([
+            'document_name' => 'required|string|max:255',
+            'file' => 'nullable|file|max:10240', // File is optional for updates
+            'expiration_date' => 'nullable|date',
+            'employee_id' => 'required|exists:employees,id'
+        ]);
+        // Update file if provided
+        if ($request->hasFile('file')) {
+            $date = Carbon::now()->format('Ymd_His'); // Example: 20240130_153012
+            $extension = $request->file->getClientOriginalExtension();
+
+            $fileName = "{$validated['employee_id']}_{$date}_{$validated['document_name']}.{$extension}";
+            // Store the file
+            $filePath = $request->file->storeAs('employee_documents', $fileName, 'public');
+            $validated['file_path'] = $fileName;
+        }
+
+        $document->update($validated);
+
+        return back()->with('success', 'Document updated successfully');
+    }
 }

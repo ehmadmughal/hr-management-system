@@ -24,7 +24,7 @@
         "@vueuse/core": "^10.2.1",
         "dayjs": "^1.11.9",
         "flag-icons": "^6.9.2",
-        "flowbite": "^1.6.5",
+        "flowbite": "^3.1.2",
         "lodash": "^4.17.21",
         "lodash.debounce": "^4.0.8",
         "vue-simple-calendar": "^6.3.1",

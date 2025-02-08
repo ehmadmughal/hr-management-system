@@ -21,8 +21,8 @@ onMounted(() => {
 });
 
 const form = useForm({
-    email: ref('super@root.com'),
-    password: ref('password'),
+    email: '',
+    password: '',
     remember: false,
 });
 
@@ -43,15 +43,10 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div class="flex justify-center font-bold py-4">
-                This is a test app. Data is reset every 24 hours.
-            </div>
-            <div class="flex flex-col justify-center mb-4 text-sm">
-                <p class="mb-2">Admin -> email: '<b>super@root.com</b>' Password: '<b>password</b>' </p>
-                <p class="mb-2">Employee -> email: '<b>spicy@pillow.com</b>' Password: '<b>password</b>' </p>
+                Enter Your details to Login
             </div>
             <div>
                 <InputLabel for="email" value="Email"/>
-
                 <TextInput
                     id="email"
                     type="email"
